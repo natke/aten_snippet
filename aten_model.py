@@ -2,8 +2,7 @@ import torch
 import torch.nn as nn
 import torch.nn.functional as F
 from torch_ort import ORTInferenceModule, DebugOptions
-
-
+from onnxruntime.training.ortmodule.torch_cpp_extensions.cpu.aten_op_executor import load_aten_op_executor_cpp_extension
 from torch.onnx import register_custom_op_symbolic
 
 def triu(g, self, x):
@@ -13,6 +12,8 @@ def triu(g, self, x):
 
 
 register_custom_op_symbolic("::triu", triu, 1)
+
+load_aten_op_executor_cpp_extension()
 
 class mynet(nn.Module):
     def __init__(self):
@@ -29,10 +30,12 @@ model = ORTInferenceModule(net, DebugOptions(save_onnx=True, onnx_prefix='aten')
 x = torch.tensor([[1, 1, 1], [2, 2, 2], [3, 3, 3]]).type(torch.float32)
 
 # Run PyTorch model first
-out = net(x)
-print(out)
+#out = net(x)
+#print(out)
 
 # Run with torch-ort-infer
+print(x)
+print("Running triu")
 out = model(x)
 print('out.size ', out.size()) #(1, 3, 480, 480)
 print(out)
